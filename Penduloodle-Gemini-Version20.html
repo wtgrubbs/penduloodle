@@ -1,0 +1,1018 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Penduloodle</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Roboto:wght@300;400&display=swap');
+
+        :root {
+            --bg-color: #121214;
+            --panel-bg: #1c1c21;
+            --border-color: #333;
+            --accent-neon: #39ff14;
+            --accent-cyan: #00f3ff;
+            --text-main: #e0e0e0;
+            --text-muted: #888;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        header {
+            padding: 8px 15px;
+            background: var(--panel-bg);
+            border-bottom: 2px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .title-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        h1 {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--accent-cyan);
+            font-size: 1.3rem;
+            text-shadow: 0 0 10px rgba(0, 243, 255, 0.4);
+            margin: 0;
+            letter-spacing: 1px;
+        }
+
+        .vertical-divider {
+            width: 2px;
+            height: 24px;
+            background-color: var(--border-color);
+        }
+
+        .simulation-controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            background: rgba(0,0,0,0.3);
+            padding: 4px 15px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+        }
+
+        .sim-slider-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.75rem;
+            color: var(--text-main);
+        }
+
+        .sim-slider-group input[type="range"] {
+            width: 80px;
+        }
+
+        .global-controls {
+            display: flex;
+            gap: 6px;
+        }
+
+        button, select {
+            background-color: transparent;
+            border: 1px solid var(--text-muted);
+            color: var(--text-main);
+            padding: 4px 10px;
+            cursor: pointer;
+            border-radius: 4px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.75rem;
+            transition: all 0.2s ease;
+        }
+
+        select option {
+            background-color: var(--panel-bg);
+            color: var(--text-main);
+        }
+
+        button:hover, select:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-color: var(--text-main);
+        }
+
+        button.btn-primary {
+            border-color: var(--accent-neon);
+            color: var(--accent-neon);
+            box-shadow: 0 0 5px rgba(57, 255, 20, 0.2);
+        }
+
+        button.btn-primary:hover {
+            background-color: var(--accent-neon);
+            color: #000;
+        }
+        
+        button.btn-info {
+            border-color: var(--accent-cyan);
+            color: var(--accent-cyan);
+        }
+
+        .main-container {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .settings-panel {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding: 8px 15px;
+            background: var(--panel-bg);
+            border-bottom: 1px solid var(--border-color);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            z-index: 10;
+        }
+
+        .pendulum-controls {
+            flex: 1;
+            min-width: 300px;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .pendulum-controls h2 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.95rem;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .pen-header { color: var(--accent-neon); }
+        .canvas-header { color: var(--accent-cyan); }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .color-picker-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.75rem;
+            color: var(--text-main);
+            font-family: 'Roboto', sans-serif;
+        }
+
+        input[type="color"] {
+            -webkit-appearance: none;
+            border: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 3px;
+            cursor: pointer;
+            background: none;
+        }
+
+        input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+        input[type="color"]::-webkit-color-swatch { border: 1px solid #555; border-radius: 3px; }
+
+        .sliders-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 10px;
+        }
+
+        .slider-group {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .slider-group label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .slider-group span {
+            color: var(--text-main);
+            font-weight: bold;
+        }
+
+        .slider-wrapper {
+            position: relative;
+            width: 100%;
+            height: 12px;
+            display: flex;
+            align-items: center;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            accent-color: var(--accent-cyan);
+            position: relative;
+            z-index: 2;
+        }
+
+        .pen-controls input[type="range"] { accent-color: var(--accent-neon); }
+
+        .slider-indicator {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            width: 2px;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 0 3px rgba(255, 255, 255, 0.8);
+            border-radius: 1px;
+            pointer-events: none;
+            z-index: 3;
+            transform: translateX(-50%);
+            display: none;
+        }
+
+        /* Content Layout Updates */
+        .content-wrapper {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            background-color: var(--bg-color);
+        }
+
+        .anim-wrapper {
+            width: 20%;
+            min-width: 180px;
+            max-width: 280px;
+            background: var(--panel-bg);
+            border-right: 2px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px;
+            box-shadow: inset -5px 0 15px rgba(0,0,0,0.5);
+            z-index: 5;
+        }
+
+        .anim-wrapper h3 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        #anim-canvas {
+            width: 100%;
+            flex: 1;
+            background-color: #0d0d0f;
+            border-radius: 6px;
+            border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: 0 0 15px rgba(0,0,0,0.8);
+        }
+
+        .canvas-wrapper {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            padding: 15px;
+        }
+
+        .canvas-container {
+            position: relative;
+            box-shadow: 0 0 40px rgba(0,0,0,1);
+        }
+
+        canvas { display: block; }
+        #paint-canvas { width: 100%; height: 100%; }
+        #overlay-canvas { position: absolute; top: 0; left: 0; pointer-events: none; z-index: 5; width: 100%; height: 100%; }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 100;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.8);
+            backdrop-filter: blur(4px);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background-color: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 25px;
+            max-width: 600px;
+            width: 90%;
+            color: var(--text-main);
+            box-shadow: 0 4px 30px rgba(0, 243, 255, 0.15);
+            max-height: 85vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .modal-content h2 {
+            color: var(--accent-cyan);
+            margin-bottom: 15px;
+            font-family: 'Orbitron', sans-serif;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        .modal-content p {
+            margin-bottom: 15px;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: #ccc;
+        }
+        
+        .modal-content ul {
+            padding-left: 20px;
+            margin-bottom: 15px;
+            color: #ccc;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .modal-content li { margin-bottom: 8px; }
+        .modal-content strong { color: var(--text-main); }
+
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            color: var(--text-muted);
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 1;
+        }
+
+        .close-btn:hover { color: var(--text-main); }
+
+        @media (max-width: 900px) {
+            .simulation-controls { order: 3; width: 100%; justify-content: space-between; margin-top: 5px;}
+            .title-section { margin-bottom: 5px; }
+            .content-wrapper { flex-direction: column; }
+            .anim-wrapper { width: 100%; max-width: none; height: 220px; border-right: none; border-bottom: 2px solid var(--border-color); }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="title-section">
+            <h1>Penduloodle</h1>
+            <div class="vertical-divider"></div>
+            <button class="btn-info" id="btn-about">About</button>
+            <button class="btn-info" id="btn-controls-help">Controls</button>
+        </div>
+        <div class="simulation-controls">
+            <div class="sim-slider-group">
+                <label>Speed: <span id="val-global-speed">1.0</span>x</label>
+                <input type="range" id="input-global-speed" min="0.1" max="3" step="0.1" value="1.0">
+            </div>
+            <div class="sim-slider-group" title="Higher values give smoother curves & high-res saved images. Changes will clear the canvas.">
+                <label>Quality: <span id="val-global-res">2.0</span>x</label>
+                <input type="range" id="input-global-res" min="1" max="5" step="0.5" value="2.0">
+            </div>
+        </div>
+        <div class="global-controls">
+            <button class="btn-primary" id="btn-start">Start</button>
+            <button id="btn-stop">Stop</button>
+            <button id="btn-clear">Clear</button>
+            <button id="btn-save">Save Image</button>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <div class="settings-panel">
+            <div class="pendulum-controls pen-controls">
+                <h2 class="pen-header">
+                    Pen
+                    <div class="header-controls">
+                        <select id="pen-weight">
+                            <option value="1.0">Thin</option>
+                            <option value="2.5">Medium</option>
+                            <option value="4.0">Thick</option>
+                        </select>
+                        <button id="btn-zero-pen">Zero All</button>
+                        <button id="btn-rainbow">🌈 Rainbow</button>
+                        <div class="color-picker-wrapper">
+                            <input type="color" id="color-pen" value="#39ff14">
+                        </div>
+                    </div>
+                </h2>
+                <div class="sliders-grid" id="pen-sliders"></div>
+            </div>
+
+            <div class="pendulum-controls canvas-controls">
+                <h2 class="canvas-header">
+                    Canvas
+                    <div class="header-controls">
+                        <button id="btn-zero-cvs">Zero All</button>
+                        <div class="color-picker-wrapper">
+                            <input type="color" id="color-canvas" value="#3d3d3d">
+                        </div>
+                    </div>
+                </h2>
+                <div class="sliders-grid" id="canvas-sliders"></div>
+            </div>
+        </div>
+
+        <div class="content-wrapper">
+            <div class="anim-wrapper" id="anim-wrapper">
+                <h3>System View</h3>
+                <canvas id="anim-canvas"></canvas>
+            </div>
+            
+            <div class="canvas-wrapper" id="canvas-wrapper">
+                <div class="canvas-container" id="canvas-container">
+                    <canvas id="paint-canvas"></canvas>
+                    <canvas id="overlay-canvas"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-about" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" id="close-about">&times;</span>
+            <h2>About Penduloodle</h2>
+            <p><strong>Pendulum painting</strong> is a mesmerizing art form where a paint bucket is suspended from a cord and set in swinging motion. As paint streams from a hole in the bottom, the non-linear physics of 3D spherical pendulum motion creates intricate, swirling Spirograph geometric patterns on a canvas below.</p>
+            <p>Penduloodle simulates this physics-based art using real Newtonian dynamics, but with a unique twist: the Canvas itself is attached to an independent pendulum! This dual-pendulum setup offers remarkable flexibility and complexity for generating digital art, appealing to those with a joint interest in physics and creative expression.</p>
+            <p>If you are unfamiliar with this artform, we highly recommend doing an internet search for <strong>"Pendulum Painting Videos"</strong> to witness real artists practicing it in action!</p>
+        </div>
+    </div>
+
+    <div id="modal-controls" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" id="close-controls">&times;</span>
+            <h2>Controls Guide</h2>
+            <p>Adjust these parameters to experiment with different physical forces and achieve unique patterns.</p>
+            <ul>
+                <li><strong>Length:</strong> Sets the physical length of the pendulum cord. Longer cords produce wider, slower swings.</li>
+                <li><strong>Gravity & Damping:</strong> Controls gravitational pull and air resistance. Higher damping causes the pendulum to lose energy and settle toward the center faster.</li>
+                <li><strong>Initial X / Initial Y:</strong> Sets the starting spatial coordinates. Swings are realistically constrained so the pendulum doesn't flip.</li>
+                <li><strong>Velocity X / Velocity Y:</strong> Applies an initial directional push to the pendulum at the exact moment the simulation begins.</li>
+            </ul>
+            <p><strong>Tool Bar Options:</strong></p>
+            <ul>
+                <li><strong>Speed & Quality:</strong> Adjusts playback speed and mathematically scales the Canvas resolution (higher quality offers smoother outputs but requires more CPU power).</li>
+                <li><strong>Rainbow:</strong> Toggles a mode where the pen color smoothly cycles through the entire color spectrum as it swings.</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        const defaultConfig = {
+            pen: { l: 2.0, g: 2.0, b: 0.0, x0: 0.3, y0: -1.0, vx0: -0.4, vy0: 0.5 },
+            cvs: { l: 3.0, g: 2.0, b: 0.0, x0: 0.0, y0: 0.0, vx0: 0.0, vy0: 0.0 }
+        };
+
+        const sliderConfigPen = [
+            { id: 'l', label: 'Length', min: 0.5, max: 2.5, step: 0.01, indicator: false },
+            { id: 'g', label: 'Gravity', min: 0, max: 10, step: 0.1, indicator: false },
+            { id: 'b', label: 'Damping', min: 0, max: 0.3, step: 0.005, indicator: false },
+            { id: 'x0', label: 'Initial X', min: -1.25, max: 1.25, step: 0.01, indicator: true },
+            { id: 'y0', label: 'Initial Y', min: -1.25, max: 1.25, step: 0.01, indicator: true },
+            { id: 'vx0', label: 'Velocity X', min: -2.0, max: 2.0, step: 0.05, indicator: true },
+            { id: 'vy0', label: 'Velocity Y', min: -2.0, max: 2.0, step: 0.05, indicator: true }
+        ];
+
+        const sliderConfigCvs = [
+            { id: 'l', label: 'Length', min: 3.0, max: 4.0, step: 0.01, indicator: false }, 
+            { id: 'g', label: 'Gravity', min: 0, max: 10, step: 0.1, indicator: false },
+            { id: 'b', label: 'Damping', min: 0, max: 0.3, step: 0.005, indicator: false },
+            { id: 'x0', label: 'Initial X', min: -1.7, max: 1.7, step: 0.01, indicator: true },
+            { id: 'y0', label: 'Initial Y', min: -1.7, max: 1.7, step: 0.01, indicator: true },
+            { id: 'vx0', label: 'Velocity X', min: -1.5, max: 1.5, step: 0.05, indicator: true },
+            { id: 'vy0', label: 'Velocity Y', min: -1.5, max: 1.5, step: 0.05, indicator: true }
+        ];
+
+        // System State
+        let state = {
+            p_x: 0, p_vx: 0, p_y: 0, p_vy: 0,
+            c_x: 0, c_vx: 0, c_y: 0, c_vy: 0,
+        };
+
+        let params = {
+            pen: { ...defaultConfig.pen },
+            cvs: { ...defaultConfig.cvs }
+        };
+
+        let isRunning = false;
+        let animationId;
+        let lastX = null, lastY = null;
+        
+        const BASE_DT = 0.002;
+        const BASE_SUBSTEPS = 50;
+        
+        let isRainbowMode = false;
+        let currentHue = 0;
+
+        const canvasContainer = document.getElementById('canvas-container');
+        const paintCanvas = document.getElementById('paint-canvas');
+        const ctx = paintCanvas.getContext('2d', { alpha: false });
+        const overlayCanvas = document.getElementById('overlay-canvas');
+        const overlayCtx = overlayCanvas.getContext('2d');
+        const cWrapper = document.getElementById('canvas-wrapper');
+        
+        // Modal Logic
+        const modalAbout = document.getElementById('modal-about');
+        const modalControls = document.getElementById('modal-controls');
+        
+        document.getElementById('btn-about').addEventListener('click', () => modalAbout.style.display = 'flex');
+        document.getElementById('btn-controls-help').addEventListener('click', () => modalControls.style.display = 'flex');
+        
+        document.getElementById('close-about').addEventListener('click', () => modalAbout.style.display = 'none');
+        document.getElementById('close-controls').addEventListener('click', () => modalControls.style.display = 'none');
+        
+        window.addEventListener('click', (e) => {
+            if (e.target === modalAbout) modalAbout.style.display = 'none';
+            if (e.target === modalControls) modalControls.style.display = 'none';
+        });
+
+        // Global UI Event Bindings
+        document.getElementById('input-global-speed').addEventListener('input', (e) => {
+            document.getElementById('val-global-speed').innerText = parseFloat(e.target.value).toFixed(1);
+        });
+
+        document.getElementById('input-global-res').addEventListener('input', (e) => {
+            document.getElementById('val-global-res').innerText = parseFloat(e.target.value).toFixed(1);
+            resizeCanvas(); 
+        });
+
+        function createSliders(containerId, entityType, configArray) {
+            const container = document.getElementById(containerId);
+            configArray.forEach(cfg => {
+                const group = document.createElement('div');
+                group.className = 'slider-group';
+                
+                const labelContainer = document.createElement('label');
+                labelContainer.innerHTML = `${cfg.label} <span id="val-${entityType}-${cfg.id}">${defaultConfig[entityType][cfg.id]}</span>`;
+                
+                const sliderWrapper = document.createElement('div');
+                sliderWrapper.className = 'slider-wrapper';
+
+                const input = document.createElement('input');
+                input.type = 'range';
+                input.id = `input-${entityType}-${cfg.id}`;
+                input.min = cfg.min;
+                input.max = cfg.max;
+                input.step = cfg.step;
+                input.value = defaultConfig[entityType][cfg.id];
+                
+                sliderWrapper.appendChild(input);
+
+                if (cfg.indicator) {
+                    const indicator = document.createElement('div');
+                    indicator.id = `indicator-${entityType}-${cfg.id}`;
+                    indicator.className = 'slider-indicator';
+                    indicator.style.display = 'block';
+                    sliderWrapper.appendChild(indicator);
+                }
+
+                input.addEventListener('input', (e) => {
+                    const val = parseFloat(e.target.value);
+                    document.getElementById(`val-${entityType}-${cfg.id}`).innerText = val;
+                    params[entityType][cfg.id] = val;
+
+                    if (!isRunning && ['x0', 'y0', 'vx0', 'vy0', 'l'].includes(cfg.id)) {
+                        initPhysics();
+                        updateIndicators();
+                        drawInitialOverlay();
+                        drawPhysicsAnim();
+                    }
+                });
+
+                group.appendChild(labelContainer);
+                group.appendChild(sliderWrapper);
+                container.appendChild(group);
+            });
+        }
+
+        createSliders('pen-sliders', 'pen', sliderConfigPen);
+        createSliders('canvas-sliders', 'cvs', sliderConfigCvs);
+
+        function resizeCanvas() {
+            const animWrapper = document.getElementById('anim-wrapper');
+            const animCanvas = document.getElementById('anim-canvas');
+            if (animWrapper && animCanvas) {
+                animCanvas.width = animWrapper.clientWidth - 20;
+                animCanvas.height = animWrapper.clientHeight - 40;
+            }
+
+            const layoutSize = Math.floor(Math.min(cWrapper.clientWidth, cWrapper.clientHeight) * 0.95);
+            
+            canvasContainer.style.width = `${layoutSize}px`;
+            canvasContainer.style.height = `${layoutSize}px`;
+            
+            const res = parseFloat(document.getElementById('input-global-res').value);
+            
+            paintCanvas.width = Math.floor(layoutSize * res);
+            paintCanvas.height = Math.floor(layoutSize * res);
+            
+            overlayCanvas.width = layoutSize;
+            overlayCanvas.height = layoutSize;
+            
+            initCanvasBackground();
+            lastX = null; 
+            lastY = null;
+
+            if (!isRunning) {
+                initPhysics();
+                updateIndicators();
+                drawInitialOverlay();
+                drawPhysicsAnim();
+            }
+        }
+        window.addEventListener('resize', resizeCanvas);
+
+        function initCanvasBackground() {
+            const bgColor = document.getElementById('color-canvas').value;
+            ctx.fillStyle = bgColor;
+            ctx.fillRect(0, 0, paintCanvas.width, paintCanvas.height);
+        }
+
+        function clampInitialState(x0, y0, length, maxAngleDeg) {
+            const maxRadius = length * Math.sin(maxAngleDeg * Math.PI / 180);
+            const currentRadius = Math.sqrt(x0*x0 + y0*y0);
+            if (currentRadius > maxRadius && currentRadius > 0) {
+                const scale = maxRadius / currentRadius;
+                return { x: x0 * scale, y: y0 * scale };
+            }
+            return { x: x0, y: y0 };
+        }
+
+        function initPhysics() {
+            const p_clamped = clampInitialState(params.pen.x0, params.pen.y0, params.pen.l, 30);
+            state.p_x = p_clamped.x;
+            state.p_y = p_clamped.y;
+            state.p_vx = params.pen.vx0;
+            state.p_vy = params.pen.vy0;
+
+            const c_clamped = clampInitialState(params.cvs.x0, params.cvs.y0, params.cvs.l, 20);
+            state.c_x = c_clamped.x;
+            state.c_y = c_clamped.y;
+            state.c_vx = params.cvs.vx0;
+            state.c_vy = params.cvs.vy0;
+
+            lastX = null;
+            lastY = null;
+        }
+
+        function zeroInitials(entityType) {
+            const keysToZero = ['x0', 'y0', 'vx0', 'vy0'];
+            keysToZero.forEach(key => {
+                params[entityType][key] = 0;
+                const input = document.getElementById(`input-${entityType}-${key}`);
+                if (input) input.value = 0;
+                const valDisplay = document.getElementById(`val-${entityType}-${key}`);
+                if (valDisplay) valDisplay.innerText = "0";
+            });
+            if (!isRunning) {
+                initPhysics();
+                updateIndicators();
+                drawInitialOverlay();
+                drawPhysicsAnim();
+            }
+        }
+
+        document.getElementById('btn-zero-pen').addEventListener('click', () => zeroInitials('pen'));
+        document.getElementById('btn-zero-cvs').addEventListener('click', () => zeroInitials('cvs'));
+
+        document.getElementById('btn-rainbow').addEventListener('click', function() {
+            isRainbowMode = !isRainbowMode;
+            if (isRainbowMode) {
+                this.style.borderColor = '#fff';
+                this.style.color = '#fff';
+                this.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
+                this.innerText = '🌈 Active';
+            } else {
+                this.style.borderColor = 'var(--text-muted)';
+                this.style.color = 'var(--text-muted)';
+                this.style.backgroundColor = 'transparent';
+                this.innerText = '🌈 Rainbow';
+            }
+            if (!isRunning) drawPhysicsAnim();
+        });
+
+        function stepPhysics(current_dt) {
+            // Non-linear Spherical Pendulum constraints for the Pen
+            let r2_p = state.p_x*state.p_x + state.p_y*state.p_y;
+            if (r2_p >= params.pen.l*params.pen.l) {
+                let scale = Math.sqrt((params.pen.l*params.pen.l * 0.9999) / r2_p);
+                state.p_x *= scale;
+                state.p_y *= scale;
+                r2_p = state.p_x*state.p_x + state.p_y*state.p_y;
+            }
+            let p_z = Math.sqrt(params.pen.l*params.pen.l - r2_p);
+            let p_vz = -(state.p_x * state.p_vx + state.p_y * state.p_vy) / p_z;
+            let p_v2 = state.p_vx*state.p_vx + state.p_vy*state.p_vy + p_vz*p_vz;
+            
+            let p_Tm = (p_v2 + params.pen.g * p_z) / params.pen.l;
+
+            let ax_p = -p_Tm * (state.p_x / params.pen.l) - params.pen.b * state.p_vx;
+            let ay_p = -p_Tm * (state.p_y / params.pen.l) * 1.005 - params.pen.b * state.p_vy;
+
+            state.p_vx += ax_p * current_dt;
+            state.p_vy += ay_p * current_dt;
+            state.p_x += state.p_vx * current_dt;
+            state.p_y += state.p_vy * current_dt;
+
+            // Non-linear Spherical Pendulum constraints for the Canvas
+            let r2_c = state.c_x*state.c_x + state.c_y*state.c_y;
+            if (r2_c >= params.cvs.l*params.cvs.l) {
+                let scale = Math.sqrt((params.cvs.l*params.cvs.l * 0.9999) / r2_c);
+                state.c_x *= scale;
+                state.c_y *= scale;
+                r2_c = state.c_x*state.c_x + state.c_y*state.c_y;
+            }
+            let c_z = Math.sqrt(params.cvs.l*params.cvs.l - r2_c);
+            let c_vz = -(state.c_x * state.c_vx + state.c_y * state.c_vy) / c_z;
+            let c_v2 = state.c_vx*state.c_vx + state.c_vy*state.c_vy + c_vz*c_vz;
+            let c_Tm = (c_v2 + params.cvs.g * c_z) / params.cvs.l;
+
+            let ax_c = -c_Tm * (state.c_x / params.cvs.l) - params.cvs.b * state.c_vx;
+            let ay_c = -c_Tm * (state.c_y / params.cvs.l) - params.cvs.b * state.c_vy;
+
+            state.c_vx += ax_c * current_dt;
+            state.c_vy += ay_c * current_dt;
+            state.c_x += state.c_vx * current_dt;
+            state.c_y += state.c_vy * current_dt;
+        }
+
+        function getCoordinates() {
+            return { x: state.p_x - state.c_x, y: state.p_y - state.c_y };
+        }
+
+        function drawOverlayAt(normX, normY) {
+            overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+            
+            const magnification = 7.0; 
+            const maxRadius = 2.5 + 4.0; 
+            const scale = ((overlayCanvas.width / 2) / maxRadius) * magnification;
+            
+            const centerX = overlayCanvas.width / 2;
+            const centerY = overlayCanvas.height / 2;
+            const screenX = centerX + normX * scale;
+            const screenY = centerY + normY * scale;
+
+            overlayCtx.beginPath();
+            overlayCtx.setLineDash([4, 4]);
+            overlayCtx.strokeStyle = 'white';
+            overlayCtx.lineWidth = 1.5;
+            overlayCtx.arc(screenX, screenY, 6, 0, Math.PI * 2);
+            overlayCtx.stroke();
+            overlayCtx.setLineDash([]);
+        }
+
+        function drawInitialOverlay() {
+            const coords = getCoordinates();
+            drawOverlayAt(coords.x, coords.y);
+        }
+
+        function drawPhysicsAnim() {
+            const animCanvas = document.getElementById('anim-canvas');
+            const actx = animCanvas.getContext('2d');
+            if (!animCanvas.width) return;
+
+            actx.clearRect(0, 0, animCanvas.width, animCanvas.height);
+
+            const pivotX = animCanvas.width / 2;
+            const pivotY = 20;
+            const max_L = 5.5; 
+            const scale = (animCanvas.height - 40) / max_L;
+
+            let penColor = document.getElementById('color-pen').value;
+            if (isRainbowMode) penColor = `hsl(${currentHue}, 100%, 50%)`;
+            const cvsColor = document.getElementById('color-canvas').value;
+
+            const p_r2 = state.p_x*state.p_x + state.p_y*state.p_y;
+            const p_z = Math.sqrt(Math.max(0, params.pen.l*params.pen.l - p_r2));
+            const p_scale = 1 + (state.p_y / params.pen.l) * 0.25; 
+            const px = pivotX + state.p_x * scale;
+            const py = pivotY + p_z * scale;
+
+            const c_r2 = state.c_x*state.c_x + state.c_y*state.c_y;
+            const c_z = Math.sqrt(Math.max(0, params.cvs.l*params.cvs.l - c_r2));
+            const c_scale = 1 + (state.c_y / params.cvs.l) * 0.25; 
+            const cx = pivotX + state.c_x * scale;
+            const cy = pivotY + c_z * scale;
+
+            if (state.c_y < state.p_y) {
+                drawAnimCanvasObj(actx, pivotX, pivotY, cx, cy, c_scale, cvsColor);
+                drawAnimPenObj(actx, pivotX, pivotY, px, py, p_scale, penColor);
+            } else {
+                drawAnimPenObj(actx, pivotX, pivotY, px, py, p_scale, penColor);
+                drawAnimCanvasObj(actx, pivotX, pivotY, cx, cy, c_scale, cvsColor);
+            }
+        }
+
+        function drawAnimCanvasObj(actx, pX, pY, cx, cy, s, color) {
+            actx.beginPath();
+            actx.setLineDash([4, 4]);
+            actx.moveTo(pX, pY);
+            actx.lineTo(cx, cy);
+            actx.strokeStyle = '#00f3ff'; 
+            actx.lineWidth = 1.5;
+            actx.stroke();
+            actx.setLineDash([]);
+
+            const w = 55 * s;
+            const h = 22 * s;
+
+            actx.fillStyle = color;
+            actx.strokeStyle = '#00f3ff';
+            actx.lineWidth = 1;
+
+            actx.beginPath();
+            actx.moveTo(cx - w, cy - h/2);
+            actx.lineTo(cx + w, cy - h/2);
+            actx.lineTo(cx + w + 15*s, cy + h/2);
+            actx.lineTo(cx - w + 15*s, cy + h/2);
+            actx.closePath();
+            actx.fill();
+            actx.stroke();
+        }
+
+        function drawAnimPenObj(actx, pX, pY, px, py, s, color) {
+            actx.beginPath();
+            actx.moveTo(pX, pY);
+            actx.lineTo(px, py);
+            actx.strokeStyle = '#39ff14'; 
+            actx.lineWidth = 1.5;
+            actx.stroke();
+
+            const r = 5 * s;
+            
+            actx.fillStyle = color;
+            actx.strokeStyle = '#fff';
+            actx.lineWidth = 1;
+
+            actx.beginPath();
+            actx.arc(px, py + r, r, 0, Math.PI * 2);
+            actx.fill();
+            actx.stroke();
+
+            actx.beginPath();
+            actx.moveTo(px - r, py + r);
+            actx.lineTo(px + r, py + r);
+            actx.lineTo(px, py + 3.5*r);
+            actx.closePath();
+            actx.fill();
+            actx.stroke();
+        }
+
+        function updateIndicators() {
+            const vals = {
+                pen: { x0: state.p_x, y0: state.p_y, vx0: state.p_vx, vy0: state.p_vy },
+                cvs: { x0: state.c_x, y0: state.c_y, vx0: state.c_vx, vy0: state.c_vy }
+            };
+
+            const trackParams = ['x0', 'y0', 'vx0', 'vy0'];
+            
+            trackParams.forEach(param => {
+                const penCfg = sliderConfigPen.find(c => c.id === param);
+                const penIndicator = document.getElementById(`indicator-pen-${param}`);
+                if (penIndicator && penCfg) {
+                    let pct = ((vals.pen[param] - penCfg.min) / (penCfg.max - penCfg.min)) * 100;
+                    penIndicator.style.left = `${Math.max(0, Math.min(100, pct))}%`;
+                }
+
+                const cvsCfg = sliderConfigCvs.find(c => c.id === param);
+                const cvsIndicator = document.getElementById(`indicator-cvs-${param}`);
+                if (cvsIndicator && cvsCfg) {
+                    let pct = ((vals.cvs[param] - cvsCfg.min) / (cvsCfg.max - cvsCfg.min)) * 100;
+                    cvsIndicator.style.left = `${Math.max(0, Math.min(100, pct))}%`;
+                }
+            });
+        }
+
+        function drawLoop() {
+            if (!isRunning) return;
+
+            const res = parseFloat(document.getElementById('input-global-res').value);
+            const speed = parseFloat(document.getElementById('input-global-speed').value);
+            const current_dt = BASE_DT / res; 
+            const steps = Math.floor(BASE_SUBSTEPS * res * speed);
+
+            let penColor = document.getElementById('color-pen').value;
+            if (isRainbowMode) {
+                penColor = `hsl(${currentHue}, 100%, 50%)`;
+                currentHue = (currentHue + (0.2 * speed)) % 360; 
+            }
+            ctx.strokeStyle = penColor;
+
+            const penWeight = document.getElementById('pen-weight').value;
+            ctx.lineWidth = parseFloat(penWeight) * res;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+
+            const magnification = 7.0; 
+            const maxRadius = 2.5 + 4.0; 
+            const scale = ((paintCanvas.width / 2) / maxRadius) * magnification;
+            const centerX = paintCanvas.width / 2;
+            const centerY = paintCanvas.height / 2;
+
+            ctx.beginPath();
+            
+            let coords;
+            for (let i = 0; i < steps; i++) {
+                stepPhysics(current_dt);
+                coords = getCoordinates();
+                
+                const screenX = centerX + coords.x * scale;
+                const screenY = centerY + coords.y * scale;
+
+                if (lastX === null) {
+                    ctx.moveTo(screenX, screenY);
+                } else {
+                    ctx.moveTo(lastX, lastY);
+                    ctx.lineTo(screenX, screenY);
+                }
+                lastX = screenX;
+                lastY = screenY;
+            }
+            ctx.stroke();
+
+            drawOverlayAt(coords.x, coords.y);
+            drawPhysicsAnim();
+            updateIndicators();
+            
+            animationId = requestAnimationFrame(drawLoop);
+        }
+
+        document.getElementById('btn-start').addEventListener('click', () => {
+            initPhysics();
+            isRunning = true;
+            if (animationId) cancelAnimationFrame(animationId);
+            drawLoop();
+        });
+
+        document.getElementById('btn-stop').addEventListener('click', () => {
+            isRunning = false;
+            if (animationId) cancelAnimationFrame(animationId);
+            drawInitialOverlay();
+        });
+
+        document.getElementById('btn-clear').addEventListener('click', () => {
+            initCanvasBackground();
+            lastX = null;
+            lastY = null;
+        });
+
+        document.getElementById('btn-save').addEventListener('click', () => {
+            const link = document.createElement('a');
+            link.download = 'penduloodle_art.png';
+            link.href = paintCanvas.toDataURL('image/png');
+            link.click();
+        });
+
+        document.getElementById('color-canvas').addEventListener('input', () => {
+            if (!isRunning) {
+                initCanvasBackground(); 
+                drawPhysicsAnim(); 
+            }
+        });
+
+        document.getElementById('color-pen').addEventListener('input', () => {
+            if (!isRunning) drawPhysicsAnim(); 
+        });
+
+        // Initialize state on load
+        resizeCanvas();
+    </script>
+</body>
+</html>
